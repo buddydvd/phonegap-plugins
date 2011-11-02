@@ -4,6 +4,24 @@
 
 #import "Prompt.h"
 
+// To avoid compilation warning, declare JSONKit and SBJson's
+// category methods without including their header files.
+@interface NSArray (StubsForSerializers)
+- (NSString *)JSONString;
+- (NSString *)JSONRepresentation;
+@end
+
+// Helper category method to choose which JSON serializer to use.
+@interface NSArray (JSONSerialize)
+- (NSString *)JSONSerialize;
+@end
+
+@implementation NSArray (JSONSerialize)
+- (NSString *)JSONSerialize {
+    return [self respondsToSelector:@selector(JSONString)] ? [self JSONString] : [self JSONRepresentation];
+}
+@end
+
 @implementation Prompt
 
 - (void) show:(NSMutableArray*)arguments withDict:(NSMutableDictionary*)options {
@@ -30,7 +48,7 @@
     if (buttonIndex != [view cancelButtonIndex]) {
         NSString *entered = [(PromptAlertView *)view enteredText];
         NSString* jsCallback = [ NSString 
-            stringWithFormat:@"%@.okCallback(\"%@\");", [(PromptAlertView *)view getCallback], entered];
+            stringWithFormat:@"%@.okCallback.apply(null, %@);", [(PromptAlertView *)view getCallback], [[NSArray arrayWithObject:entered] JSONSerialize]];
         [super writeJavascript : jsCallback];
     }
     else {
