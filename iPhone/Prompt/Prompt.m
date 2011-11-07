@@ -4,6 +4,9 @@
 
 #import "Prompt.h"
 
+// Help create NSNull objects for nil items (since neither NSArray nor NSDictionary can store nil values).
+#define NILABLE(obj) ((obj) != nil ? (NSObject *)(obj) : (NSObject *)[NSNull null])
+
 // To avoid compilation warning, declare JSONKit and SBJson's
 // category methods without including their header files.
 @interface NSArray (StubsForSerializers)
@@ -48,7 +51,7 @@
     if (buttonIndex != [view cancelButtonIndex]) {
         NSString *entered = [(PromptAlertView *)view enteredText];
         NSString* jsCallback = [ NSString 
-            stringWithFormat:@"%@.okCallback.apply(null, %@);", [(PromptAlertView *)view getCallback], [[NSArray arrayWithObject:entered] JSONSerialize]];
+            stringWithFormat:@"%@.okCallback.apply(null, %@);", [(PromptAlertView *)view getCallback], [[NSArray arrayWithObject:NILABLE(entered)] JSONSerialize]];
         [super writeJavascript : jsCallback];
     }
     else {
